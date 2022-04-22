@@ -1,14 +1,13 @@
 import torch
 import torchvision
 import onnx
+from PIL import Image
 import numpy as np
 import tvm
 from tvm import te
 import tvm.relay as relay
 
 onnx_model = onnx.load('resnet18.onnx')
-
-from PIL import Image
 
 image_path = 'cat.png'
 img = Image.open(image_path).resize((224, 224))
