@@ -7,6 +7,10 @@ import tvm
 from tvm import te
 import tvm.relay as relay
 
+from tvm._ffi.registry import list_global_func_names
+
+func_names = list_global_func_names()
+# 'relay.transform.LiftConstants'
 onnx_model = onnx.load('resnet18.onnx')
 
 image_path = 'cat.png'
