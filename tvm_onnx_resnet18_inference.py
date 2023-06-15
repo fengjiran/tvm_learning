@@ -11,7 +11,7 @@ import tvm.relay as relay
 from tvm._ffi.registry import get_global_func
 
 # func_names = list_global_func_names()
-func_name =  'relay.transform.LiftConstants'
+func_name = 'relay.transform.LiftConstants'
 func = get_global_func(func_name)
 onnx_model = onnx.load('resnet18.onnx')
 
