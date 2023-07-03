@@ -1,11 +1,10 @@
+import numpy as np
+import onnx
 import torch
 import torchvision
-import onnx
-from PIL import Image
-import numpy as np
 import tvm
-from tvm import te
 import tvm.relay as relay
+from PIL import Image
 
 # from tvm._ffi.registry import list_global_func_names
 # from tvm._ffi.registry import get_global_func
