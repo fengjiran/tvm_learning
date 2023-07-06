@@ -6,7 +6,7 @@ import tvm
 from PIL import Image
 from tvm import get_global_func
 from tvm import relay
-from tvm.relay import op
+# from tvm.relay import op
 from tvm._ffi.registry import list_global_func_names
 
 func_names = list_global_func_names()
