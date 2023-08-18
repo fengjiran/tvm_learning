@@ -9,6 +9,12 @@ class TestTVMLibLoad(unittest.TestCase):
         for path in lib_path:
             print(path)
 
+    def test_find_include_path(self):
+        include_path = libinfo.find_include_path()
+        self.assertNotEqual(len(include_path), 0, 'Not found tvm header files for C compilation.')
+        for path in include_path:
+            print(path)
+
 
 # https://www.cnblogs.com/miki-peng/p/12501341.html
 if __name__ == '__main__':
