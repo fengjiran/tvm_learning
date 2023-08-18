@@ -14,7 +14,7 @@ class TestPackedFunc(unittest.TestCase):
 
         # get it from global function table
         f = tvm.get_global_func('my_packed_func')
-        assert isinstance(f, tvm.runtime.PackedFunc)
+        self.assertIsInstance(f, tvm.runtime.PackedFunc)
         y = f(*targs)
         self.assertEqual(y, 10)
 

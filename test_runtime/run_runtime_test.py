@@ -1,6 +1,7 @@
 import unittest
 import test_lib_load
 import test_global_func
+import test_packed_func
 
 
 def create_suite():
@@ -8,6 +9,7 @@ def create_suite():
     loader = unittest.TestLoader()
     suite.addTest(loader.loadTestsFromModule(test_lib_load))
     suite.addTest(loader.loadTestsFromModule(test_global_func))
+    suite.addTest(loader.loadTestsFromModule(test_packed_func))
     return suite
 
 
