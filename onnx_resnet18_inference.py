@@ -4,14 +4,11 @@ import torch
 import torchvision
 import tvm
 from PIL import Image
-from tvm import get_global_func
 from tvm import relay
 # from tvm.relay import op
 from tvm._ffi.registry import list_global_func_names
 
 func_names = list_global_func_names()
-func_name = 'relay.transform.LiftConstants'
-func = get_global_func(func_name)
 onnx_model = onnx.load('resnet18.onnx')
 
 image_path = 'cat.png'
