@@ -1,11 +1,14 @@
 import unittest
 import test_lib_load
 
-# Create a test suite
-suite = unittest.TestSuite()
 
-# Create a loader obj
-loader = unittest.TestLoader()
-suite.addTest(loader.loadTestsFromModule(test_lib_load))
-runner = unittest.TextTestRunner()
-runner.run(suite)
+def create_suite():
+    suite = unittest.TestSuite()
+    loader = unittest.TestLoader()
+    suite.addTest(loader.loadTestsFromModule(test_lib_load))
+    return suite
+
+
+if __name__ == '__main__':
+    runner = unittest.TextTestRunner()
+    runner.run(create_suite())
