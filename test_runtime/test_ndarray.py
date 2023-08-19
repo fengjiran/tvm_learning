@@ -5,6 +5,10 @@ import unittest
 
 
 class TestNDArray(unittest.TestCase):
+    def test_dtype(self):
+        dtype = tvm.DataType('handle')
+        self.assertEqual(dtype.type_code, tvm.DataTypeCode.HANDLE)
+
     @tvm.testing.uses_gpu
     def test_nd_create(self):
         for target, dev in tvm.testing.enabled_targets():
