@@ -131,3 +131,4 @@ dmypy.json
 .idea/
 .pkl_memoize_py3/
 .vscode/
+.DS_Store
