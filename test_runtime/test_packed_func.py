@@ -3,6 +3,15 @@ import tvm
 
 
 class TestPackedFunc(unittest.TestCase):
+    def test_convert(self):
+        targs = (10, 10.0, "hello")
+
+        def myfunc(*args):
+            assert tuple(args) == targs
+
+        f = tvm.runtime.convert(myfunc)
+        self.assertIsInstance(f, tvm.runtime.PackedFunc)
+
     def test_get_global_func(self):
         targs = (10, 10.0, "hello")
 
