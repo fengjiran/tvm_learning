@@ -12,6 +12,16 @@ class TestPackedFunc(unittest.TestCase):
         f = tvm.runtime.convert(myfunc)
         self.assertIsInstance(f, tvm.runtime.PackedFunc)
 
+    def test_return_func(self):
+        def addy(y):
+            def add(x):
+                return tvm.runtime.convert(x + y)
+            return add
+
+        myf = tvm.runtime.convert(addy)
+        f = myf(10)
+        self.assertEqual(f(11).value, 21)
+
     def test_get_global_func(self):
         targs = (10, 10.0, "hello")
 
