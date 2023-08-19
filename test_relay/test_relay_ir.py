@@ -1,5 +1,7 @@
 import unittest
 import tvm
+from tvm import relay
+import numpy as np
 
 
 def check_json_roundtrip(node):
@@ -9,4 +11,15 @@ def check_json_roundtrip(node):
 
 
 class TestRelayIR(unittest.TestCase):
-    pass
+    def test_constant(self):
+        arr = np.random.uniform(0, 10, size=(3, 4))
+        const = relay.Constant(tvm.nd.array(arr))
+        np.testing.assert_array_equal(const.data.numpy(), arr)
+        self.assertIsNone(const.span)
+        print(const)
+        # str(const)
+        check_json_roundtrip(const)
+
+
+if __name__ == '__main__':
+    unittest.main()
