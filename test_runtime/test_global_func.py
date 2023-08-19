@@ -8,7 +8,7 @@ from tvm._ffi.registry import list_global_func_names
 class TestGlobalFunc(unittest.TestCase):
     def test_get_global_func(self):
         func = get_global_func("relay._transform.FoldConstantExpr")
-        self.assertNotEqual(func, None)
+        self.assertIsNotNone(func)
         self.assertIsInstance(func, tvm.runtime.PackedFunc)
 
     @unittest.skip('There are so many global functions.')

@@ -18,6 +18,26 @@ class TestPackedFunc(unittest.TestCase):
         y = f(*targs)
         self.assertEqual(y, 10)
 
+    def test_get_callback_with_node(self):
+        x = tvm.runtime.convert(10)
+
+        def test(y):
+            assert y.handle != x.handle
+            return y
+
+        f2 = tvm.runtime.convert(test)
+        self.assertIsInstance(f2, tvm.runtime.PackedFunc)
+
+        @tvm.register_func
+        def my_callback_with_node(y, f):
+            assert y == x
+            return f(y)
+
+        f = tvm.get_global_func('my_callback_with_node')
+        self.assertIsInstance(f, tvm.runtime.PackedFunc)
+        y = f(x, f2)
+        self.assertEqual(y.value, 10)
+
 
 if __name__ == '__main__':
     unittest.main()
