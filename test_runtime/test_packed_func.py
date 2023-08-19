@@ -57,6 +57,16 @@ class TestPackedFunc(unittest.TestCase):
         y = f(x, f2)
         self.assertEqual(y.value, 10)
 
+    def test_byte_array(self):
+        s = "hello"
+        a = bytearray(s, encoding='ascii')
+
+        def myfunc(ss):
+            assert ss == a
+
+        f = tvm.runtime.convert(myfunc)
+        f(a)
+
 
 if __name__ == '__main__':
     unittest.main()
