@@ -1,6 +1,6 @@
 import unittest
 import tvm
-
+import tvm.testing
 
 class TestPackedFunc(unittest.TestCase):
     def test_convert(self):
@@ -66,6 +66,16 @@ class TestPackedFunc(unittest.TestCase):
 
         f = tvm.runtime.convert(myfunc)
         f(a)
+
+    def test_device(self):
+        def test_device_func(dev):
+            self.assertEqual(tvm.cuda(7), dev)
+            return tvm.cpu(0)
+        x = test_device_func(tvm.cuda(7))
+        self.assertEqual(x, tvm.cpu(0))
+        x = tvm.opencl(10)
+        x = tvm.testing.device_test(x, x.device_type, x.device_id)
+        self.assertEqual(x, tvm.opencl(10))
 
 
 if __name__ == '__main__':
