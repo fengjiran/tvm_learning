@@ -22,7 +22,7 @@ class TestFoldConstant(unittest.TestCase):
         c_data = np.array([1, 2, 3]).astype('float32')
         t = relay.TensorType([1, 2, 3], 'float32')
 
-        def befor():
+        def before():
             c = relay.const(c_data)
             x = relay.var('x', t)
             y = relay.add(c, c)
@@ -30,6 +30,18 @@ class TestFoldConstant(unittest.TestCase):
             y = relay.add(x, y)
             z = relay.add(y, c)
             return relay.Function([x], z)
+
+        def expected():
+            x = relay.var('x', t)
+            c_folded = (c_data + c_data) * 2
+            y = relay.add(x, relay.const(c_folded))
+            z = relay.add(y, relay.const(c_data))
+            return relay.Function([x], z)
+
+        with tvm.target.Target('cuda'):
+            zz = run_opt_pass(before(), relay.transform.FoldConstant())
+        zexpected = run_opt_pass(expected(), relay.transform.InferType())
+        tvm.ir.assert_structural_equal(zz, zexpected)
 
 
 if __name__ == '__main__':
