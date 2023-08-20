@@ -12,13 +12,16 @@ def check_json_roundtrip(node):
 
 class TestRelayIR(unittest.TestCase):
     def test_constant(self):
-        arr = np.random.uniform(0, 10, size=(3, 4))
-        const = relay.Constant(tvm.nd.array(arr))
-        np.testing.assert_array_equal(const.data.numpy(), arr)
-        self.assertIsNone(const.span)
-        print(const)
+        arr = np.random.uniform(0, 10, size=(3, 4)).astype(np.float32)
+        const1 = relay.Constant(tvm.nd.array(arr))
+        const2 = relay.const(arr)
+        np.testing.assert_array_equal(const1.data.numpy(), arr)
+        np.testing.assert_array_equal(const2.data.numpy(), arr)
+        self.assertIsNone(const1.span)
+        print(const1)
+        print(const2)
         # str(const)
-        check_json_roundtrip(const)
+        check_json_roundtrip(const1)
 
 
 if __name__ == '__main__':
