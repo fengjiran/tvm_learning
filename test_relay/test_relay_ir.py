@@ -23,6 +23,15 @@ class TestRelayIR(unittest.TestCase):
         # str(const)
         check_json_roundtrip(const1)
 
+    def test_tuple(self):
+        fields = tvm.runtime.convert([])
+        tup = relay.Tuple(fields)
+        self.assertEqual(tup.fields, fields)
+        self.assertIsNone(tup.span)
+        print(tup)
+        str(tup)
+        check_json_roundtrip(tup)
+
 
 if __name__ == '__main__':
     unittest.main()
