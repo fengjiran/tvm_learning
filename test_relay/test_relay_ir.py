@@ -49,6 +49,17 @@ class TestRelayIR(unittest.TestCase):
         print(gv)
         check_json_roundtrip(gv)
 
+    def test_call(self):
+        op = relay.Var('f')
+        arg_names = ['a', 'b', 'c', 'd']
+        args = tvm.runtime.convert([relay.Var(n) for n in arg_names])
+        call = relay.Call(op, args)
+        self.assertEqual(call.op, op)
+        self.assertEqual(call.args, args)
+        self.assertIsNone(call.span)
+        print(call)
+        check_json_roundtrip(call)
+
 
 if __name__ == '__main__':
     unittest.main()
