@@ -32,6 +32,14 @@ class TestRelayIR(unittest.TestCase):
         str(tup)
         check_json_roundtrip(tup)
 
+    def test_local_var(self):
+        name_hint = 's'
+        local_var = relay.Var(name_hint)
+        self.assertEqual(local_var.name_hint, name_hint)
+        self.assertIsNone(local_var.type_annotation)
+        str(local_var)
+        check_json_roundtrip(local_var)
+
 
 if __name__ == '__main__':
     unittest.main()
