@@ -29,7 +29,9 @@ class TestFoldConstant(unittest.TestCase):
             y = relay.multiply(y, relay.const(2, 'float32'))
             y = relay.add(x, y)
             z = relay.add(y, c)
-            return relay.Function([x], z)
+            func = relay.Function([x], z)
+            print(func.astext(show_meta_data=False))
+            return func
 
         def expected():
             x = relay.var('x', t)
@@ -38,7 +40,7 @@ class TestFoldConstant(unittest.TestCase):
             z = relay.add(y, relay.const(c_data))
             return relay.Function([x], z)
 
-        with tvm.target.Target('cuda'):
+        with tvm.target.Target('llvm'):
             zz = run_opt_pass(before(), relay.transform.FoldConstant())
         zexpected = run_opt_pass(expected(), relay.transform.InferType())
         tvm.ir.assert_structural_equal(zz, zexpected)
