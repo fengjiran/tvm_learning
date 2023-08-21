@@ -30,6 +30,7 @@ class TestFoldConstant(unittest.TestCase):
             y = relay.add(x, y)
             z = relay.add(y, c)
             func = relay.Function([x], z)
+            print('Before fold constant:')
             print(func.astext(show_meta_data=False))
             return func
 
@@ -39,6 +40,7 @@ class TestFoldConstant(unittest.TestCase):
             y = relay.add(x, relay.const(c_folded))
             z = relay.add(y, relay.const(c_data))
             func = relay.Function([x], z)
+            print('Expect fold constant result:')
             print(func.astext(show_meta_data=False))
             return func
 
