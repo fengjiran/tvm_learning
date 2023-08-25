@@ -9,6 +9,18 @@ class TestTE(unittest.TestCase):
         m = te.size_var('m')
         n = te.size_var('n')
         l = te.size_var('l')
+        A = te.placeholder((m, l), name='A')
+        B = te.placeholder((n, l), name='B')
+        T = te.compute((m, n, l), lambda i, j, k: A[i, k] * B[j, k])
+        print(T)
+        print(T.op.body)
+        self.assertTrue(tuple(T.shape) == (m, n, l))
+        self.assertIsInstance(A.op, te.PlaceholderOp)
+        self.assertTrue(T.op.output(0) == T)
+        self.assertTrue(T.op.output(0).__hash__() == T.__hash__())
+        d = {T.op.output(0): 1}
+        self.assertTrue(d[T] == 1)
+        self.assertTrue(T[0][0][0].astype("float16").dtype == "float16")
 
 
 if __name__ == '__main__':
