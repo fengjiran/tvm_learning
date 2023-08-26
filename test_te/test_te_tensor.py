@@ -37,8 +37,11 @@ class TestTE(unittest.TestCase):
         n = te.size_var("n")
         A = te.placeholder((m, n), name="A")
         k = te.reduce_axis((0, n), "k")
-        mysum = te.comm_reducer(lambda x, y: x + y, lambda t: tvm.tir.const(0, dtype=t))
-        C = te.compute((m,), lambda i: mysum(A[i, k], axis=k))
+        fcombine = lambda x, y: x + y
+        fidentity = lambda t: tvm.tir.const(0, dtype=t)
+        mysum = te.comm_reducer(fcombine, fidentity)
+        fcompute = lambda i: mysum(A[i, k], axis=k)
+        C = te.compute((m,), fcompute)
 
 
 if __name__ == '__main__':
