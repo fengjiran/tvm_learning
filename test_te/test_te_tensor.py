@@ -27,7 +27,10 @@ class TestTE(unittest.TestCase):
         A = te.placeholder((m,), name='A')
         scale = te.placeholder((), name='scale')
         k = te.reduce_axis((0, m), name='k')
-
+        T = te.compute((), lambda: te.sum(A[k] * scale(), axis=k))
+        print(T)
+        print(T.op.body)
+        self.assertTrue(tuple(T.shape) == ())
 
 
 if __name__ == '__main__':
