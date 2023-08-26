@@ -32,6 +32,14 @@ class TestTE(unittest.TestCase):
         print(T.op.body)
         self.assertTrue(tuple(T.shape) == ())
 
+    def test_common_reducer(self):
+        m = te.size_var("m")
+        n = te.size_var("n")
+        A = te.placeholder((m, n), name="A")
+        k = te.reduce_axis((0, n), "k")
+        mysum = te.comm_reducer(lambda x, y: x + y, lambda t: tvm.tir.const(0, dtype=t))
+        C = te.compute((m,), lambda i: mysum(A[i, k], axis=k))
+
 
 if __name__ == '__main__':
     unittest.main()
