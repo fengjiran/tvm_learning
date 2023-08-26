@@ -22,6 +22,13 @@ class TestTE(unittest.TestCase):
         self.assertTrue(d[T] == 1)
         self.assertTrue(T[0][0][0].astype("float16").dtype == "float16")
 
+    def test_rank_zero(self):
+        m = te.size_var('m')
+        A = te.placeholder((m,), name='A')
+        scale = te.placeholder((), name='scale')
+        k = te.reduce_axis((0, m), name='k')
+
+
 
 if __name__ == '__main__':
     unittest.main()
