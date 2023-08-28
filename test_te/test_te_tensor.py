@@ -48,6 +48,11 @@ class TestTE(unittest.TestCase):
         A = te.placeholder((n + 2), name="A")
         B = te.compute((n,), lambda i: A[i] + A[i + 1] + A[i + 2])
 
+    def test_tensor_slice(self):
+        n = te.size_var('n')
+        A = te.compute((n, n), lambda i, j: 1)
+        B = te.compute((n,), lambda i: A[0][i] + A[0][i])
+
 
 if __name__ == '__main__':
     unittest.main()
