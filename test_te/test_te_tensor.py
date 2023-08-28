@@ -43,6 +43,11 @@ class TestTE(unittest.TestCase):
         fcompute = lambda i: mysum(A[i, k], axis=k)
         C = te.compute((m,), fcompute)
 
+    def test_conv1d(self):
+        n = te.size_var("n")
+        A = te.placeholder((n + 2), name="A")
+        B = te.compute((n), lambda i: A[i] + A[i + 1] + A[i + 2])
+
 
 if __name__ == '__main__':
     unittest.main()
