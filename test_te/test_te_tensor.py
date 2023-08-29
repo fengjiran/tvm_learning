@@ -57,6 +57,15 @@ class TestTE(unittest.TestCase):
         self.assertTrue(tuple(A.shape) == (n, n))
         self.assertTrue(tuple(B.shape) == (n,))
 
+    def test_tensor_reduce_multi_axis(self):
+        m = te.size_var("m")
+        n = te.size_var("n")
+        A = te.placeholder((m, n), name="A")
+        k1 = te.reduce_axis((0, n), "k1")
+        k2 = te.reduce_axis((0, m), "k2")
+        B = te.compute((1,), lambda _: te.sum(A[k1, k2], axis=(k1, k2)))
+        self.assertTrue(tuple(B.shape) == (1,))
+
 
 if __name__ == '__main__':
     unittest.main()
