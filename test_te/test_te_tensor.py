@@ -42,16 +42,20 @@ class TestTE(unittest.TestCase):
         mysum = te.comm_reducer(fcombine, fidentity)
         fcompute = lambda i: mysum(A[i, k], axis=k)
         C = te.compute((m,), fcompute)
+        self.assertTrue(tuple(C.shape) == (m,))
 
     def test_conv1d(self):
         n = te.size_var("n")
         A = te.placeholder((n + 2), name="A")
         B = te.compute((n,), lambda i: A[i] + A[i + 1] + A[i + 2])
+        self.assertTrue(tuple(B.shape) == (n,))
 
     def test_tensor_slice(self):
         n = te.size_var('n')
         A = te.compute((n, n), lambda i, j: 1)
         B = te.compute((n,), lambda i: A[0][i] + A[0][i])
+        self.assertTrue(tuple(A.shape) == (n, n))
+        self.assertTrue(tuple(B.shape) == (n,))
 
 
 if __name__ == '__main__':
