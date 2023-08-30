@@ -2,17 +2,15 @@ import numpy as np
 import onnx
 import torch
 import torchvision
+from torchvision import transforms
 import tvm
 from PIL import Image
 from tvm import relay
 
-onnx_model = onnx.load('resnet18.onnx')
-
 image_path = 'cat.png'
 img = Image.open(image_path).resize((224, 224))
 
-# Preprocess the image and convert to tensor
-from torchvision import transforms
+onnx_model = onnx.load('resnet18.onnx')
 
 # 加载torchvision中的ResNet18模型
 model_name = "resnet18"
