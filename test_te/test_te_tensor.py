@@ -66,6 +66,16 @@ class TestTE(unittest.TestCase):
         B = te.compute((1,), lambda _: te.sum(A[k1, k2], axis=(k1, k2)))
         self.assertTrue(tuple(B.shape) == (1,))
 
+    def test_tensor_scan(self):
+        m = te.size_var("m")
+        n = te.size_var("n")
+        x = te.placeholder((m, n))
+        state = te.placeholder((m, n))
+        init = te.compute((1, n), lambda _, i: x[0, i])
+        update = te.compute((m, n), lambda t, i: state[t - 1, i] + x[t, i])
+        scan = te.scan(init, update, state)
+        self.assertTrue(tuple(scan.shape) == (m, n))
+
 
 if __name__ == '__main__':
     unittest.main()
