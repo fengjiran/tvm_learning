@@ -13,6 +13,9 @@ class TestTESchedule(unittest.TestCase):
         ko, ki = s[T].split(T.op.reduce_axis[0], factor=16)
         print(tvm.lower(s, [A, T], simple_mode=True))
 
+    def test_fuse(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
