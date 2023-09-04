@@ -11,6 +11,7 @@ class TestTESchedule(unittest.TestCase):
         T = te.compute((1,), lambda i: te.sum(A[k], axis=k), name='T')
         s = te.create_schedule(T.op)
         ko, ki = s[T].split(T.op.reduce_axis[0], factor=16)
+        print(tvm.lower(s, [A, T], simple_mode=True))
 
 
 if __name__ == '__main__':
