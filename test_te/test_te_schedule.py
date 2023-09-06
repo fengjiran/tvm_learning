@@ -16,6 +16,13 @@ class TestTESchedule(unittest.TestCase):
     def test_fuse(self):
         pass
 
+    def test_tile(self):
+        m = te.size_var("m")
+        n = te.size_var("n")
+        k = te.size_var("k")
+        A = te.placeholder((m, k), name="A")
+        B = te.placeholder((k, n), name="B")
+
 
 if __name__ == '__main__':
     unittest.main()
