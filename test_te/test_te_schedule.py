@@ -34,8 +34,12 @@ class TestTESchedule(unittest.TestCase):
         m = te.size_var("m")
         n = te.size_var("n")
         k = te.size_var("k")
+        red_k = te.reduce_axis((0, k), name="red_k")
+
         A = te.placeholder((m, k), name="A")
         B = te.placeholder((k, n), name="B")
+        T = te.compute((m, n), lambda i, j: te.sum(A[i, red_k] * B[red_k, j], axis=red_k))
+        s = te.create_schedule(T.op)
 
 
 if __name__ == '__main__':
