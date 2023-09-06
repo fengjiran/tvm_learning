@@ -24,9 +24,11 @@ class TestTESchedule(unittest.TestCase):
         C = te.compute((m, n), lambda i, j: A[i, j] + B[i, j], name="C")
         s = te.create_schedule(C.op)
         self.assertEqual(len(s.stages), 3)
+        print(tvm.lower(s, [A, B, C], simple_mode=True))
         xo, xi = s[C].split(C.op.axis[0], factor=32)
         yo, yi = s[C].split(C.op.axis[1], factor=32)
         s[C].reorder(xo, yo, yi, xi)
+        print(tvm.lower(s, [A, B, C], simple_mode=True))
 
     def test_tile(self):
         m = te.size_var("m")
