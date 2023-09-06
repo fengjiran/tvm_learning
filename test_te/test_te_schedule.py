@@ -5,7 +5,7 @@ from tvm import te
 
 class TestTESchedule(unittest.TestCase):
     def test_split(self):
-        n = 1024
+        n = te.size_var("n") # 1024
         k = te.reduce_axis((0, n), name='k')
         A = te.placeholder((n,), name="A")
         T = te.compute((1,), lambda i: te.sum(A[k], axis=k), name='T')
