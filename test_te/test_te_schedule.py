@@ -40,8 +40,8 @@ class TestTESchedule(unittest.TestCase):
         B = te.placeholder((k, n), name="B")
         T = te.compute((m, n), lambda i, j: te.sum(A[i, red_k] * B[red_k, j], axis=red_k))
         s = te.create_schedule(T.op)
-        stage = s[T]
-
+        xo, yo, xi, yi = s[T].tile(T.op.axis[0], T.op.axis[1], x_factor=10, y_factor=5)
+        self.assertTrue(tuple(s[T].leaf_iter_vars[:4]) == (xo, yo, xi, yi))
 
 
 if __name__ == '__main__':
