@@ -59,6 +59,8 @@ class TestTESchedule(unittest.TestCase):
         T = te.compute((m,), lambda i: te.sum(A[i, k], axis=k), name="T")
         s = te.create_schedule(T.op)
         print(tvm.lower(s, [A, T], simple_mode=True))
+        s.cache_read(A, "shared", [T])
+        print(tvm.lower(s, [A, T], simple_mode=True))
 
 
 if __name__ == '__main__':
