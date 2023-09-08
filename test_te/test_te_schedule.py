@@ -52,6 +52,14 @@ class TestTESchedule(unittest.TestCase):
         xo, yo, xi, yi = s[T].tile(T.op.axis[0], T.op.axis[1], x_factor=10, y_factor=5)
         self.assertTrue(tuple(s[T].leaf_iter_vars[:4]) == (xo, yo, xi, yi))
 
+    def test_cache_read(self):
+        m = te.size_var("m")
+        k = te.reduce_axis((0, m), name="k")
+        A = te.placeholder((m, m), name="A")
+        T = te.compute((m,), lambda i: te.sum(A[i, k], axis=k), name="T")
+        s = te.create_schedule(T.op)
+        print(tvm.lower(s, [A, T], simple_mode=True))
+
 
 if __name__ == '__main__':
     unittest.main()
