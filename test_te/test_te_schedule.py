@@ -62,6 +62,17 @@ class TestTESchedule(unittest.TestCase):
         s.cache_read(A, "shared", [T])
         print(tvm.lower(s, [A, T], simple_mode=True))
 
+    def test_cache_write(self):
+        n = te.size_var("n")
+        k = te.reduce_axis((0, n), name="k")
+        A = te.placeholder((n, n), name="A")
+        T = te.compute((n,), lambda i: te.sum(A[i, k], axis=k), name="T")
+        s = te.create_schedule(T.op)
+        print(tvm.lower(s, [A, T], simple_mode=True))
+        print('----------------------------cut line-------------------------------')
+        s.cache_write(T, "local")
+        print(tvm.lower(s, [A, T], simple_mode=True))
+
 
 if __name__ == '__main__':
     unittest.main()
