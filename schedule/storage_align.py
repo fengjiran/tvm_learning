@@ -2,7 +2,7 @@ import tvm
 from tvm import te
 
 m = 1024
-n = 1024
+n = 1132
 factor = 100
 offset = 8
 dtype = 'float32'
