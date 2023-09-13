@@ -107,6 +107,20 @@ class TestTESchedule(unittest.TestCase):
         s[B].compute_inline()
         print(tvm.lower(s, [A, B, C], simple_mode=True))
 
+    def test_vectorize(self):
+        m = te.size_var("m")
+        n = te.size_var("n")
+        A = te.placeholder((m, n), name='A')
+        B = te.placeholder((m, n), name='B')
+        C = te.compute((m, n), lambda i, j: A[i, j] + B[i, j], name='C')
+
+        s = te.create_schedule(C.op)
+        xo, yo, xi, yi = s[C].tile(C.op.axis[0], C.op.axis[1], 32, 32)
+        print(tvm.lower(s, [A, B, C], simple_mode=True))
+        print('----------------------------cut line-------------------------------')
+        s[C].vectorize(yi)
+        print(tvm.lower(s, [A, B, C], simple_mode=True))
+
 
 if __name__ == '__main__':
     unittest.main()
