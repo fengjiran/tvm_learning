@@ -94,6 +94,9 @@ class TestTESchedule(unittest.TestCase):
         C = te.compute((m,), lambda i: B[i] * 2, name='C')
         s = te.create_schedule(C.op)
         print(tvm.lower(s, [A, B, C], simple_mode=True))
+        print('----------------------------cut line-------------------------------')
+        s[B].compute_at(s[C], C.op.axis[0])
+        print(tvm.lower(s, [A, B, C], simple_mode=True))
 
 
 if __name__ == '__main__':
