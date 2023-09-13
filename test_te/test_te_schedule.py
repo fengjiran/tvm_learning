@@ -87,6 +87,14 @@ class TestTESchedule(unittest.TestCase):
         s[B].set_scope('shared')
         print(tvm.lower(s, [A, C], simple_mode=True))
 
+    def test_compute_at(self):
+        m = te.size_var("m")
+        A = te.placeholder((m,), name='A')
+        B = te.compute((m,), lambda i: A[i] + 1, name='B')
+        C = te.compute((m,), lambda i: B[i] * 2, name='C')
+        s = te.create_schedule(C.op)
+        print(tvm.lower(s, [A, B, C], simple_mode=True))
+
 
 if __name__ == '__main__':
     unittest.main()
