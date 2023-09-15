@@ -177,6 +177,9 @@ class TestTESchedule(unittest.TestCase):
         s.rfactor(B, ki)
         print(tvm.lower(s, [A, B], simple_mode=True))
 
+    def test_naive_conv(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
