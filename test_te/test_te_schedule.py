@@ -178,7 +178,16 @@ class TestTESchedule(unittest.TestCase):
         print(tvm.lower(s, [A, B], simple_mode=True))
 
     def test_naive_conv(self):
-        pass
+        n = te.size_var("n")
+        inp = te.placeholder((n, n), name="input")
+        weight = te.placeholder((3, 3), name="weight")
+        ki = te.reduce_axis((0, 3), name="ki")
+        kj = te.reduce_axis((0, 3), name="kj")
+        output = te.compute((n - 2, n - 2),
+                            lambda i, j: te.sum(inp[i + ki, j + kj] * weight[ki, kj], axis=[ki, kj]),
+                            name="output")
+        sch = te.create_schedule(output.op)
+        print(tvm.lower(sch, [inp, weight, output], simple_mode=True))
 
 
 if __name__ == '__main__':
