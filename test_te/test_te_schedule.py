@@ -189,6 +189,9 @@ class TestTESchedule(unittest.TestCase):
         sch = te.create_schedule(output.op)
         print(tvm.lower(sch, [inp, weight, output], simple_mode=True))
 
+    def test_matmul(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
