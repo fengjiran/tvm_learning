@@ -15,3 +15,4 @@ print('----------------------------cut line-------------------------------')
 
 BR = s.rfactor(B, ki)
 print(tvm.lower(s, [A, B], simple_mode=True))
+print("end")
