@@ -192,6 +192,9 @@ class TestTESchedule(unittest.TestCase):
     def test_matmul(self):
         pass
 
+    def test_conv(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
