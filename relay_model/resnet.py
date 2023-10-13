@@ -24,8 +24,8 @@ Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun. "Identity Mappings in Deep Re
 """
 # pylint: disable=unused-argument
 from tvm import relay
-from init import create_workload
-import layers
+from .init import create_workload
+from . import layers
 
 
 def residual_unit(
