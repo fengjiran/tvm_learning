@@ -1,5 +1,4 @@
 import unittest
-import numpy as np
 import tvm
 from tvm import relay
 from tvm.ir import structural_equal
