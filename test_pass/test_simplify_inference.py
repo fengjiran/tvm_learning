@@ -19,6 +19,10 @@ class TestSimplifyInference(unittest.TestCase):
             shift = relay.expand_dims(shift, axis=1, num_newaxis=num_newaxis)
         return x * scale + shift
 
+    def check(self, axis, nstep):
+        eps = 0.01
+
+
 
 if __name__ == '__main__':
     unittest.main()
