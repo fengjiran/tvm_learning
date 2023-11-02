@@ -43,6 +43,9 @@ class TestFuseOps(unittest.TestCase):
         after = run_opt_pass(expected(), relay.transform.InferType())
         self.assertTrue(tvm.ir.structural_equal(zz, after))
 
+    def test_conv2d_fuse(self):
+        pass
+
 
 if __name__ == '__main__':
     unittest.main()
