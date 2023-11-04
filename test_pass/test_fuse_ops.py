@@ -101,6 +101,21 @@ class TestFuseOps(unittest.TestCase):
         after = run_opt_pass(expected(shape), relay.transform.InferType())
         self.assertTrue(tvm.ir.structural_equal(zz, after))
 
+    def test_concat(self):
+        """Test fusion case involving cancat op and Tuple node."""
+
+        def before(shape):
+            x = relay.var("x", shape=shape)
+            pooled = relay.nn.max_pool2d(x, pool_size=(2, 2), strides=(2, 2), padding=(0, 0))
+            upsampled = relay.nn.upsampling(pooled, scale_h=2, scale_w=2, layout="NCHW")
+            concat = relay.concatenate((upsampled, x), axis=1)
+            out = relay.add(concat, relay.const(1, "float32"))
+            return relay.Function(relay.analysis.free_vars(out), out)
+
+        shape = (1, 16, 64, 64)
+        z = before(shape)
+        print(z)
+
 
 if __name__ == '__main__':
     unittest.main()
