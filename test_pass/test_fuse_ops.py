@@ -98,13 +98,14 @@ class TestFuseOps(unittest.TestCase):
         shape = (1, 16, 64, 64)
         z = before(shape)
         zz = run_opt_pass(z, relay.transform.FuseOps(2))
+        print(zz)
         after = run_opt_pass(expected(shape), relay.transform.InferType())
         self.assertTrue(tvm.ir.structural_equal(zz, after))
 
     def test_concat(self):
         """Test fusion case involving cancat op and Tuple node."""
 
-        def before(shape):
+        def before(shape: tuple) -> relay.Function:
             x = relay.var("x", shape=shape)
             pooled = relay.nn.max_pool2d(x, pool_size=(2, 2), strides=(2, 2), padding=(0, 0))
             upsampled = relay.nn.upsampling(pooled, scale_h=2, scale_w=2, layout="NCHW")
@@ -112,9 +113,32 @@ class TestFuseOps(unittest.TestCase):
             out = relay.add(concat, relay.const(1, "float32"))
             return relay.Function(relay.analysis.free_vars(out), out)
 
+        def expected(shape: tuple) -> relay.Function:
+            # segment0
+            x = relay.var("x", shape=shape)
+            pooled = relay.nn.max_pool2d(x, pool_size=(2, 2), strides=(2, 2), padding=(0, 0))
+            f0 = relay.Function([x], pooled)
+            f0 = f0.with_attr("Primitive", tvm.tir.IntImm("int32", 1))
+
+            # segment1
+            p0 = relay.var("p0", shape=(shape[0], shape[1], shape[2] // 2, shape[3] // 2))
+            p1 = relay.var("p1", shape=shape)
+            upsampled = relay.nn.upsampling(p0, scale_h=2, scale_w=2, layout="NCHW")
+            concat = relay.concatenate((upsampled, p1), axis=1)
+            out = relay.add(concat, relay.const(1, "float32"))
+            f1 = relay.Function([p0, p1], out)
+            f1 = f1.with_attr("Primitive", tvm.tir.IntImm("int32", 1))
+
+            x = relay.var("x", shape=shape)
+            y = relay.Call(f0, [x])
+            z = relay.Call(f1, [y, x])
+            return relay.Function([x], z)
+
         shape = (1, 16, 64, 64)
         z = before(shape)
-        print(z)
+        zz = run_opt_pass(z, relay.transform.FuseOps(2))
+        after = run_opt_pass(expected(shape), relay.transform.InferType())
+        self.assertTrue(tvm.ir.structural_equal(zz, after))
 
 
 if __name__ == '__main__':
