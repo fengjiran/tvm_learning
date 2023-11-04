@@ -140,6 +140,19 @@ class TestFuseOps(unittest.TestCase):
         after = run_opt_pass(expected(shape), relay.transform.InferType())
         self.assertTrue(tvm.ir.structural_equal(zz, after))
 
+    def test_root_tuple(self):
+        """Test fusion case where Tuple node is the root in its group."""
+
+        def before(shape: tuple) -> relay.Function:
+            x = relay.var("x", shape=shape)
+            pooled = relay.nn.max_pool2d(x, pool_size=(2, 2), strides=(2, 2), padding=(0, 0))
+            upsampled = relay.nn.upsampling(pooled, scale_h=2, scale_w=2, layout="NCHW")
+            out = relay.Tuple((upsampled, x))
+            return relay.Function(relay.analysis.free_vars(out), out)
+
+        def expected(shape: tuple) -> relay.Function:
+            pass
+
 
 if __name__ == '__main__':
     unittest.main()
