@@ -151,7 +151,27 @@ class TestFuseOps(unittest.TestCase):
             return relay.Function(relay.analysis.free_vars(out), out)
 
         def expected(shape: tuple) -> relay.Function:
-            pass
+            x = relay.var("x", shape=shape)
+            pooled = relay.nn.max_pool2d(x, pool_size=(2, 2), strides=(2, 2), padding=(0, 0))
+            f0 = relay.Function([x], pooled)
+            f0 = f0.with_attr("Primitive", tvm.tir.IntImm("int32", 1))
+
+            p0 = relay.var("p0", shape=(shape[0], shape[1], shape[2] // 2, shape[3] // 2))
+            upsampled = relay.nn.upsampling(p0, scale_h=2, scale_w=2, layout="NCHW")
+            f1 = relay.Function([p0], upsampled)
+            f1 = f1.with_attr("Primitive", tvm.tir.IntImm("int32", 1))
+
+            x = relay.var("x", shape=shape)
+            y = relay.Call(f0, [x])
+            z = relay.Call(f1, [y])
+            tup = relay.Tuple((z, x))
+            return relay.Function([x], tup)
+
+        shape = (1, 16, 64, 64)
+        z = before(shape)
+        zz = run_opt_pass(z, relay.transform.FuseOps(2))
+        after = run_opt_pass(expected(shape), relay.transform.InferType())
+        self.assertTrue(tvm.ir.structural_equal(zz, after))
 
 
 if __name__ == '__main__':
