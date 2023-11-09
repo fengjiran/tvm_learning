@@ -1,6 +1,8 @@
 import unittest
 import tvm
 from tvm import te
+from tvm import relay
+from tvm import topi
 
 
 class TestTESchedule(unittest.TestCase):
@@ -17,13 +19,22 @@ class TestTESchedule(unittest.TestCase):
         m = te.size_var("m")
         n = te.size_var("n")
         A = te.placeholder((m, n), name="A")
-        T = te.compute((m, n), lambda i, j: A[i, j])
-
+        T = topi.nn.relu(A)
         s = te.create_schedule(T.op)
+        print("\n\033[31mOriginal schedule:\033[0m")
+        print(tvm.lower(s, [A, T], simple_mode=True))
+        print('------------------------------------cut line---------------------------------------')
+
         xo, yo, xi, yi = s[T].tile(T.op.axis[0], T.op.axis[1], x_factor=10, y_factor=5)
+        print("\033[32mSchedule after tile:\033[0m")
+        print(tvm.lower(s, [A, T], simple_mode=True))
+        print('------------------------------------cut line---------------------------------------')
+
         fused = s[T].fuse(xo, yo)
         self.assertTrue(any(isinstance(x, te.schedule.Fuse) for x in s[T].relations))
         self.assertTrue(tuple(s[T].leaf_iter_vars) == (fused, xi, yi))
+        print("\033[32mSchedule after tile and fuse:\033[0m")
+        print(tvm.lower(s, [A, T], simple_mode=True))
 
     def test_reorder(self):
         m = te.size_var("m")
