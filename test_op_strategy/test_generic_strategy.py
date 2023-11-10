@@ -13,27 +13,39 @@ class TestGenericStrategy(unittest.TestCase):
     def test_relu_schedule(self):
         dshape = (10, 3, 256, 256)
         dtype = "float32"
-        target = "llvm"
-        dev = tvm.device(target, 0)
+        target = "cuda"
+        tvm_dev = tvm.device(target, 0)
 
         # get schedule
         A = te.placeholder(dshape, name="A", dtype=dtype)
         T = topi.nn.relu(A)
-        s = te.create_schedule(T.op)
+
+        if target == "llvm":
+            with tvm.target.Target(target):
+                s = topi.x86.schedule_injective(T)
+            torch_dev = torch.device("cpu")
+        elif target == "cuda":
+            with tvm.target.Target(target):
+                s = topi.cuda.schedule_injective(T)
+            torch_dev = torch.device("cuda:0")
+        else:
+            raise ValueError("No target of {}".format(target))
+
         with tvm.transform.PassContext(3):
             func = tvm.build(s, [A, T], target=target, name="relu")
 
         # get test data
         inps = np.random.rand(*dshape).astype(dtype)
+        a = tvm.nd.array(inps, tvm_dev)
+        t = tvm.nd.array(np.zeros(dshape, dtype=dtype), tvm_dev)
+        func(a, t)
 
         # verify correctness
-        ans = nn.ReLU(True)(torch.from_numpy(inps)).numpy()
-        a = tvm.nd.array(inps, dev)
-        t = tvm.nd.array(np.zeros(dshape, dtype=dtype), dev)
-        func(a, t)
+        ans = nn.ReLU(True)(torch.from_numpy(inps).to(torch_dev)).to("cpu").numpy()
         np.testing.assert_allclose(t.numpy(), ans)
 
-        evaluator = func.time_evaluator(func.entry_name, dev, number=500)
+        # evaluate run time
+        evaluator = func.time_evaluator(func.entry_name, tvm_dev, number=50)
         tvm_time = evaluator(a, t).mean
         print("\nTime: {}s".format(tvm_time))
         print("done")
