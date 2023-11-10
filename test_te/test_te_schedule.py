@@ -126,10 +126,17 @@ class TestTESchedule(unittest.TestCase):
         C = te.compute((m, n), lambda i, j: A[i, j] + B[i, j], name='C')
 
         s = te.create_schedule(C.op)
-        xo, yo, xi, yi = s[C].tile(C.op.axis[0], C.op.axis[1], 32, 32)
+        print("\n\033[31mOriginal schedule:\033[0m")
         print(tvm.lower(s, [A, B, C], simple_mode=True))
-        print('----------------------------cut line-------------------------------')
+        print('------------------------------------cut line---------------------------------------')
+
+        xo, yo, xi, yi = s[C].tile(C.op.axis[0], C.op.axis[1], 32, 32)
+        print("\033[32mSchedule after tile:\033[0m")
+        print(tvm.lower(s, [A, B, C], simple_mode=True))
+        print('------------------------------------cut line---------------------------------------')
+
         s[C].vectorize(yi)
+        print("\033[32mSchedule after vectorize:\033[0m")
         print(tvm.lower(s, [A, B, C], simple_mode=True))
 
     def test_unroll(self):
@@ -170,7 +177,7 @@ class TestTESchedule(unittest.TestCase):
         print("\n\033[31mOriginal schedule:\033[0m")
         print(tvm.lower(s, [A, B], simple_mode=True))
         print('----------------------------cut line-------------------------------')
-        
+
         print("\033[32mSchedule after parallel:\033[0m")
         s[B].parallel(B.op.reduce_axis[0])
         print(tvm.lower(s, [A, B], simple_mode=True))

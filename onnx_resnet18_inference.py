@@ -46,7 +46,7 @@ mod, params = relay.frontend.from_onnx(onnx_model, shape_dict)
 print(mod)
 
 with tvm.transform.PassContext(opt_level=1):
-    intrp = relay.build_module.create_executor("graph", mod, tvm.cpu(0), target)
+    intrp = relay.build_module.create_executor("debug", mod, tvm.cpu(0), target)
 
 ######################################################################
 # Execute on TVM
