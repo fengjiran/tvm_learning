@@ -1,3 +1,4 @@
+import os
 import unittest
 import numpy as np
 import torch
@@ -8,12 +9,14 @@ from tvm import relay
 from tvm import topi
 from tvm.relay.testing import run_infer_type
 
+os.environ['TVM_NUM_THREADS'] = str(1)
+
 
 class TestGenericStrategy(unittest.TestCase):
     def test_relu_schedule(self):
         dshape = (10, 3, 256, 256)
         dtype = "float32"
-        target = "cuda"
+        target = "llvm"
         tvm_dev = tvm.device(target, 0)
 
         # get schedule
@@ -47,7 +50,9 @@ class TestGenericStrategy(unittest.TestCase):
         # evaluate run time
         evaluator = func.time_evaluator(func.entry_name, tvm_dev, number=50)
         tvm_time = evaluator(a, t).mean
-        print("\nTime: {}s".format(tvm_time))
+        GFLOPS = np.prod(dshape) * 1e-9
+        print("\nTVM without tune time: {}s".format(tvm_time))
+        print("TVM without tune GFLOPS: {}".format(GFLOPS / tvm_time))
         print("done")
 
     def test_relu_strategy(self):
