@@ -161,15 +161,17 @@ class TestTESchedule(unittest.TestCase):
         print(tvm.lower(s, [A, B], simple_mode=True))
 
     def test_parallel(self):
-        m = 1024
-        n = 1024
-        A = te.placeholder((n, m), name='A')
-        k = te.reduce_axis((0, m), name='k')
-        B = te.compute((n,), lambda i: te.sum(A[i, k], axis=k), name='B')
-
+        m = te.size_var("m")
+        n = te.size_var("n")
+        A = te.placeholder((m, n), name='A')
+        k = te.reduce_axis((0, n), name='k')
+        B = te.compute((m,), lambda i: te.sum(A[i, k], axis=k), name='B')
         s = te.create_schedule(B.op)
+        print("\n\033[31mOriginal schedule:\033[0m")
         print(tvm.lower(s, [A, B], simple_mode=True))
         print('----------------------------cut line-------------------------------')
+        
+        print("\033[32mSchedule after parallel:\033[0m")
         s[B].parallel(B.op.reduce_axis[0])
         print(tvm.lower(s, [A, B], simple_mode=True))
 
