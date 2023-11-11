@@ -66,13 +66,40 @@ class TestGenericStrategy(unittest.TestCase):
         B = te.placeholder((k, n), name="B", dtype=dtype)
         red_k = te.reduce_axis((0, k), name="k")
         C = te.compute((m, n), lambda i, j: te.sum(A[i, red_k] * B[red_k, j], axis=red_k), name="C")
-        sch = te.create_schedule(C.op)
-        mo, no, mi, ni = sch[C].tile(C.op.axis[0], C.op.axis[1], 32, 32)
-        kaxis = C.op.reduce_axis[0]
-        ko, ki = sch[C].split(kaxis, 4)
-        sch[C].reorder(mo, no, ko, mi, ki, ni)
+        m_axis = C.op.axis[0]
+        n_axis = C.op.axis[1]
+        k_axis = C.op.reduce_axis[0]
+
+        def get_default_schedule():
+            return te.create_schedule(C.op)
+
+        def get_schedule_with_reorder_kmn():
+            sch = te.create_schedule(C.op)
+            sch[C].reorder(k_axis, m_axis, n_axis)
+            return sch
+
+        def get_schedule_with_redorder_mkn():
+            sch = te.create_schedule(C.op)
+            sch[C].reorder(m_axis, k_axis, n_axis)
+            return sch
+
+        def get_schedule_with_tile():
+            sch = te.create_schedule(C.op)
+            mo, no, mi, ni = sch[C].tile(m_axis, n_axis, 32, 32)
+            ko, ki = sch[C].split(k_axis, 4)
+            # sch[C].reorder(mo, no, ko, mi, ki, ni)
+            sch[C].reorder(mo, ko, no, mi, ki, ni)
+            return sch
+
+        # sch[C].reorder(kaxis, C.op.axis[0], C.op.axis[1])
+        # ko, ki = sch[C].split(kaxis, 4)
+        # sch[C].reorder(mo, no, ko, mi, ki, ni)
         # sch[C].reorder(kaxis, mo, no, mi, ni)
 
+        # sch = get_default_schedule()
+        # sch = get_schedule_with_reorder_kmn()
+        # sch = get_schedule_with_redorder_mkn()
+        sch = get_schedule_with_tile()
         with tvm.transform.PassContext(3):
             func = tvm.build(sch, [A, B, C], target=target, name="matmul")
 
