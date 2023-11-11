@@ -59,6 +59,7 @@ class TestGenericStrategy(unittest.TestCase):
         m = 1024
         n = 1024
         k = 1024
+        bn = 32
         dtype = "float32"
         target = "llvm"
         tvm_dev = tvm.device(target, 0)
@@ -69,6 +70,14 @@ class TestGenericStrategy(unittest.TestCase):
         m_axis = C.op.axis[0]
         n_axis = C.op.axis[1]
         k_axis = C.op.reduce_axis[0]
+
+        # packed B
+        PackedB = te.compute((n / bn, k, bn), lambda bigN, k_, littleN: B[k_, bigN * bn + littleN], name="PackedB")
+        CC = te.compute((m, n),
+                        lambda i, j: te.sum(
+                            A[i, red_k] * PackedB[j // bn, red_k, tvm.tir.indexmod(j, tvm.tir.IntImm("int32", bn))],
+                            axis=red_k),
+                        name="CC")
 
         def get_default_schedule():
             return te.create_schedule(C.op)
@@ -85,7 +94,7 @@ class TestGenericStrategy(unittest.TestCase):
 
         def get_schedule_with_tile():
             sch = te.create_schedule(C.op)
-            mo, no, mi, ni = sch[C].tile(m_axis, n_axis, 32, 32)
+            mo, no, mi, ni = sch[C].tile(m_axis, n_axis, bn, bn)
             ko, ki = sch[C].split(k_axis, 4)
             # sch[C].reorder(mo, no, ko, mi, ki, ni)
             sch[C].reorder(mo, ko, no, mi, ki, ni)
@@ -93,22 +102,29 @@ class TestGenericStrategy(unittest.TestCase):
 
         def get_schedule_with_tile_vectorize():
             sch = te.create_schedule(C.op)
-            mo, no, mi, ni = sch[C].tile(m_axis, n_axis, 32, 32)
+            mo, no, mi, ni = sch[C].tile(m_axis, n_axis, bn, bn)
             ko, ki = sch[C].split(k_axis, 4)
             sch[C].reorder(mo, ko, no, mi, ki, ni)
             sch[C].vectorize(ni)
             return sch
 
-        # sch[C].reorder(kaxis, C.op.axis[0], C.op.axis[1])
-        # ko, ki = sch[C].split(kaxis, 4)
-        # sch[C].reorder(mo, no, ko, mi, ki, ni)
-        # sch[C].reorder(kaxis, mo, no, mi, ni)
+        def get_schedule_with_packing():
+            s = te.create_schedule(CC.op)
+            mo, no, mi, ni = s[CC].tile(CC.op.axis[0], CC.op.axis[1], bn, bn)
+            ko, ki = s[CC].split(s[CC].op.reduce_axis[0], 4)
+            s[CC].reorder(mo, no, ko, mi, ki, ni)
+            s[CC].vectorize(ni)
+            # bigN, _, littleN = s[PackedB].op.axis
+            # s[PackedB].vectorize(littleN)
+            # s[PackedB].parallel(bigN)
+            return s
 
         # sch = get_default_schedule()
         # sch = get_schedule_with_reorder_kmn()
         # sch = get_schedule_with_redorder_mkn()
         # sch = get_schedule_with_tile()
         sch = get_schedule_with_tile_vectorize()
+        # sch = get_schedule_with_packing()
         with tvm.transform.PassContext(3):
             func = tvm.build(sch, [A, B, C], target=target, name="matmul")
 
