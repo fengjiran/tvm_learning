@@ -55,6 +55,30 @@ class TestGenericStrategy(unittest.TestCase):
         print("TVM without tune GFLOPS: {}".format(GFLOPS / tvm_time))
         print("done")
 
+    def test_matmul_strategy(self):
+        m = 1024
+        n = 1024
+        k = 1024
+        dtype = "float32"
+        target = "llvm"
+        tvm_dev = tvm.device(target, 0)
+        A = te.placeholder((m, k), name="A", dtype=dtype)
+        B = te.placeholder((k, n), name="B", dtype=dtype)
+        red_k = te.reduce_axis((0, k), name="k")
+        C = te.compute((m, n), lambda i, j: te.sum(A[i, red_k] * B[red_k, j], axis=red_k), name="C")
+        default_sch = te.create_schedule(C.op)
+
+        with tvm.transform.PassContext(3):
+            func = tvm.build(default_sch, [A, B, C], target=target, name="matmul")
+
+        # get test data
+        a = tvm.nd.array(np.random.rand(m, k).astype(dtype), tvm_dev)
+        b = tvm.nd.array(np.random.rand(k, n).astype(dtype), tvm_dev)
+        c = tvm.nd.array(np.zeros((m, n), dtype=dtype), tvm_dev)
+        ans = np.dot(a.numpy(), b.numpy())
+        func(a, b, c)
+        np.testing.assert_allclose(c.numpy(), ans, rtol=1e-5)
+
     def test_relu_strategy(self):
         target = tvm.target.Target("llvm")
         dshape = (10, 3, 256, 256)
