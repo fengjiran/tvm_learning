@@ -91,6 +91,14 @@ class TestGenericStrategy(unittest.TestCase):
             sch[C].reorder(mo, ko, no, mi, ki, ni)
             return sch
 
+        def get_schedule_with_tile_vectorize():
+            sch = te.create_schedule(C.op)
+            mo, no, mi, ni = sch[C].tile(m_axis, n_axis, 32, 32)
+            ko, ki = sch[C].split(k_axis, 4)
+            sch[C].reorder(mo, ko, no, mi, ki, ni)
+            sch[C].vectorize(ni)
+            return sch
+
         # sch[C].reorder(kaxis, C.op.axis[0], C.op.axis[1])
         # ko, ki = sch[C].split(kaxis, 4)
         # sch[C].reorder(mo, no, ko, mi, ki, ni)
@@ -99,7 +107,8 @@ class TestGenericStrategy(unittest.TestCase):
         # sch = get_default_schedule()
         # sch = get_schedule_with_reorder_kmn()
         # sch = get_schedule_with_redorder_mkn()
-        sch = get_schedule_with_tile()
+        # sch = get_schedule_with_tile()
+        sch = get_schedule_with_tile_vectorize()
         with tvm.transform.PassContext(3):
             func = tvm.build(sch, [A, B, C], target=target, name="matmul")
 
