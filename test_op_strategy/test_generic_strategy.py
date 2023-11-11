@@ -66,10 +66,15 @@ class TestGenericStrategy(unittest.TestCase):
         B = te.placeholder((k, n), name="B", dtype=dtype)
         red_k = te.reduce_axis((0, k), name="k")
         C = te.compute((m, n), lambda i, j: te.sum(A[i, red_k] * B[red_k, j], axis=red_k), name="C")
-        default_sch = te.create_schedule(C.op)
+        sch = te.create_schedule(C.op)
+        mo, no, mi, ni = sch[C].tile(C.op.axis[0], C.op.axis[1], 32, 32)
+        kaxis = C.op.reduce_axis[0]
+        ko, ki = sch[C].split(kaxis, 4)
+        sch[C].reorder(mo, no, ko, mi, ki, ni)
+        # sch[C].reorder(kaxis, mo, no, mi, ni)
 
         with tvm.transform.PassContext(3):
-            func = tvm.build(default_sch, [A, B, C], target=target, name="matmul")
+            func = tvm.build(sch, [A, B, C], target=target, name="matmul")
 
         # get test data
         a = tvm.nd.array(np.random.rand(m, k).astype(dtype), tvm_dev)
@@ -78,6 +83,14 @@ class TestGenericStrategy(unittest.TestCase):
         ans = np.dot(a.numpy(), b.numpy())
         func(a, b, c)
         np.testing.assert_allclose(c.numpy(), ans, rtol=1e-5)
+
+        # evaluate run time and gflops
+        evaluator = func.time_evaluator(func.entry_name, tvm_dev, number=10)
+        tvm_time = evaluator(a, b, c).mean
+        GFLOPS = 2 * m * n * k * 1e-9
+        print("\nTVM without tune time: {}s".format(tvm_time))
+        print("TVM without tune GFLOPS: {}".format(GFLOPS / tvm_time))
+        print("done")
 
     def test_relu_strategy(self):
         target = tvm.target.Target("llvm")
