@@ -108,6 +108,21 @@ class TestGenericStrategy(unittest.TestCase):
             sch[C].vectorize(ni)
             return sch
 
+        def get_schedule_with_cache_write():
+            sch = te.create_schedule(C.op)
+            # allocate write cache
+            CC = sch.cache_write(C, "local")
+            mo, no, mi, ni = sch[C].tile(m_axis, n_axis, bn, bn)
+            # cache write is computed at no axis
+            sch[CC].compute_at(sch[C], no)
+            mc, nc = CC.op.axis
+            kaxis = CC.op.reduce_axis[0]
+            ko, ki = sch[CC].split(kaxis, 4)
+            sch[CC].reorder(ko, mc, ki, nc)
+            sch[CC].vectorize(nc)
+            sch[CC].unroll(ki)
+            return sch
+
         def get_schedule_with_packing():
             s = te.create_schedule(CC.op)
             mo, no, mi, ni = s[CC].tile(CC.op.axis[0], CC.op.axis[1], bn, bn)
@@ -119,14 +134,30 @@ class TestGenericStrategy(unittest.TestCase):
             # s[PackedB].parallel(bigN)
             return s
 
+        def get_schedule_with_packing_cache_write():
+            s = te.create_schedule(CC.op)
+            # allocate write cache
+            CCC = s.cache_write(CC, "local")
+            mo, no, mi, ni = s[CC].tile(CC.op.axis[0], CC.op.axis[1], bn, bn)
+
+            s[CCC].compute_at(s[CC], no)
+            mc, nc = CCC.op.axis
+            kaxis = CCC.op.reduce_axis[0]
+            ko, ki = s[CCC].split(kaxis, 4)
+            s[CCC].reorder(ko, mc, ki, nc)
+            s[CCC].vectorize(nc)
+            return s
+
         # sch = get_default_schedule()
         # sch = get_schedule_with_reorder_kmn()
         # sch = get_schedule_with_redorder_mkn()
         # sch = get_schedule_with_tile()
-        sch = get_schedule_with_tile_vectorize()
+        # sch = get_schedule_with_tile_vectorize()
+        # sch = get_schedule_with_cache_write()
         # sch = get_schedule_with_packing()
+        sch = get_schedule_with_packing_cache_write()
         with tvm.transform.PassContext(3):
-            func = tvm.build(sch, [A, B, C], target=target, name="matmul")
+            func = tvm.build(sch, [A, B, CC], target=target, name="matmul")
 
         # get test data
         a = tvm.nd.array(np.random.rand(m, k).astype(dtype), tvm_dev)
