@@ -9,7 +9,7 @@ from tvm import relay
 from tvm import topi
 from tvm.relay.testing import run_infer_type
 
-os.environ['TVM_NUM_THREADS'] = str(1)
+# os.environ['TVM_NUM_THREADS'] = str(1)
 
 
 class TestGenericStrategy(unittest.TestCase):
@@ -61,7 +61,8 @@ class TestGenericStrategy(unittest.TestCase):
         k = 1024
         bn = 32
         dtype = "float32"
-        target = "llvm"
+        target = "llvm -mcpu=core-avx2"
+        # target = "llvm"
         tvm_dev = tvm.device(target, 0)
         A = te.placeholder((m, k), name="A", dtype=dtype)
         B = te.placeholder((k, n), name="B", dtype=dtype)
@@ -119,6 +120,7 @@ class TestGenericStrategy(unittest.TestCase):
             kaxis = CC.op.reduce_axis[0]
             ko, ki = sch[CC].split(kaxis, 4)
             sch[CC].reorder(ko, mc, ki, nc)
+            sch[C].parallel(mo)
             sch[CC].vectorize(nc)
             sch[CC].unroll(ki)
             return sch
@@ -146,6 +148,7 @@ class TestGenericStrategy(unittest.TestCase):
             ko, ki = s[CCC].split(kaxis, 4)
             s[CCC].reorder(ko, mc, ki, nc)
             s[CCC].vectorize(nc)
+            s[CC].parallel(mo)
             return s
 
         # sch = get_default_schedule()
@@ -153,11 +156,11 @@ class TestGenericStrategy(unittest.TestCase):
         # sch = get_schedule_with_redorder_mkn()
         # sch = get_schedule_with_tile()
         # sch = get_schedule_with_tile_vectorize()
-        # sch = get_schedule_with_cache_write()
+        sch = get_schedule_with_cache_write()
         # sch = get_schedule_with_packing()
-        sch = get_schedule_with_packing_cache_write()
+        # sch = get_schedule_with_packing_cache_write()
         with tvm.transform.PassContext(3):
-            func = tvm.build(sch, [A, B, CC], target=target, name="matmul")
+            func = tvm.build(sch, [A, B, C], target=target, name="matmul")
 
         # get test data
         a = tvm.nd.array(np.random.rand(m, k).astype(dtype), tvm_dev)
