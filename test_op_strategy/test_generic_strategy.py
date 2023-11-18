@@ -8,6 +8,8 @@ from tvm import te
 from tvm import relay
 from tvm import topi
 from tvm.relay.testing import run_infer_type
+from tvm.contrib import cblas
+from tvm.contrib import dnnl
 
 # os.environ['TVM_NUM_THREADS'] = str(1)
 
@@ -159,6 +161,74 @@ class TestGenericStrategy(unittest.TestCase):
         sch = get_schedule_with_cache_write()
         # sch = get_schedule_with_packing()
         # sch = get_schedule_with_packing_cache_write()
+        with tvm.transform.PassContext(3):
+            func = tvm.build(sch, [A, B, C], target=target, name="matmul")
+
+        # get test data
+        a = tvm.nd.array(np.random.rand(m, k).astype(dtype), tvm_dev)
+        b = tvm.nd.array(np.random.rand(k, n).astype(dtype), tvm_dev)
+        c = tvm.nd.array(np.zeros((m, n), dtype=dtype), tvm_dev)
+        ans = np.dot(a.numpy(), b.numpy())
+        func(a, b, c)
+        np.testing.assert_allclose(c.numpy(), ans, rtol=1e-5)
+
+        # evaluate run time and gflops
+        evaluator = func.time_evaluator(func.entry_name, tvm_dev, number=10)
+        tvm_time = evaluator(a, b, c).mean
+        GFLOPS = 2 * m * n * k * 1e-9
+        print("\nTVM without tune time: {}s".format(tvm_time))
+        print("TVM without tune GFLOPS: {}".format(GFLOPS / tvm_time))
+        print("done")
+
+    def test_matmul_cblas_strategy(self):
+        m = 1024
+        n = 1024
+        k = 1024
+        dtype = "float32"
+        target = "llvm -libs=cblas"
+        tvm_dev = tvm.device(target, 0)
+        A = te.placeholder((m, k), name="A", dtype=dtype)
+        B = te.placeholder((k, n), name="B", dtype=dtype)
+        with tvm.target.Target(target):
+            C = topi.x86.matmul_cblas(A, B)
+            # C = cblas.matmul(A, B)
+            sch = topi.x86.schedule_matmul_cblas([C])
+            # sch = te.create_schedule(C.op)
+
+        with tvm.transform.PassContext(3):
+            func = tvm.build(sch, [A, B, C], target=target, name="matmul")
+
+        # get test data
+        a = tvm.nd.array(np.random.rand(m, k).astype(dtype), tvm_dev)
+        b = tvm.nd.array(np.random.rand(k, n).astype(dtype), tvm_dev)
+        c = tvm.nd.array(np.zeros((m, n), dtype=dtype), tvm_dev)
+        ans = np.dot(a.numpy(), b.numpy())
+        func(a, b, c)
+        np.testing.assert_allclose(c.numpy(), ans, rtol=1e-5)
+
+        # evaluate run time and gflops
+        evaluator = func.time_evaluator(func.entry_name, tvm_dev, number=10)
+        tvm_time = evaluator(a, b, c).mean
+        GFLOPS = 2 * m * n * k * 1e-9
+        print("\nTVM without tune time: {}s".format(tvm_time))
+        print("TVM without tune GFLOPS: {}".format(GFLOPS / tvm_time))
+        print("done")
+
+    def test_matmul_dnnl_strategy(self):
+        m = 1024
+        n = 1024
+        k = 1024
+        dtype = "float32"
+        target = "llvm -libs=cblas"
+        tvm_dev = tvm.device(target, 0)
+        A = te.placeholder((m, k), name="A", dtype=dtype)
+        B = te.placeholder((k, n), name="B", dtype=dtype)
+        with tvm.target.Target(target):
+            # C = topi.x86.matmul_dnnl(A, B)
+            C = dnnl.matmul(A, B)
+            # sch = topi.x86.schedule_matmul_dnnl([C])
+            sch = te.create_schedule(C.op)
+
         with tvm.transform.PassContext(3):
             func = tvm.build(sch, [A, B, C], target=target, name="matmul")
 
