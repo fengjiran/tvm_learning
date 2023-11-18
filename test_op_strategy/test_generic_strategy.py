@@ -219,7 +219,7 @@ class TestGenericStrategy(unittest.TestCase):
         n = 1024
         k = 1024
         dtype = "float32"
-        target = "llvm -libs=cblas"
+        target = "llvm -libs=dnnl"
         tvm_dev = tvm.device(target, 0)
         A = te.placeholder((m, k), name="A", dtype=dtype)
         B = te.placeholder((k, n), name="B", dtype=dtype)
