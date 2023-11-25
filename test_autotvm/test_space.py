@@ -21,6 +21,26 @@ class TestAutotvmSpace(unittest.TestCase):
         self.assertTrue(cfg.range_length == 64)
         self.assertTrue(len(cfg.space_map["split_y"]) == 8)
 
+    def test_policy(self):
+        cfg = ConfigSpace()
+        cfg.define_split("tile_x", cfg.axis(256), policy="factors", num_outputs=3)
+        self.assertTrue(len(cfg.space_map["tile_x"]) == 45)
+
+        cfg.define_split("tile_y", cfg.axis(256), policy="power2", num_outputs=3)
+        self.assertTrue(len(cfg.space_map["tile_y"]) == 45)
+
+        cfg.define_split("tile_z", cfg.axis(256), policy="verbose", num_outputs=3)
+        self.assertTrue(len(cfg.space_map["tile_z"]) == 45)
+
+        cfg.define_split("tile_a", cfg.axis(224), policy="factors", num_outputs=3)
+        self.assertTrue(len(cfg.space_map["tile_a"]) == 63)
+
+        cfg.define_split("tile_b", cfg.axis(224), policy="power2", num_outputs=3)
+        self.assertTrue(len(cfg.space_map["tile_b"]) == 36)
+
+        cfg.define_split("tile_c", cfg.axis(224), policy="verbose", num_outputs=3)
+        self.assertTrue(len(cfg.space_map["tile_c"]) == 84)
+
 
 if __name__ == '__main__':
     unittest.main()
