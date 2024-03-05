@@ -10,7 +10,7 @@ def check_json_roundtrip(node):
     assert tvm.ir.structural_equal(back, node, map_free_vars=True)
 
 
-class TestRelayIR(unittest.TestCase):
+class TestRelayIRNodes(unittest.TestCase):
     def test_constant(self):
         arr = np.random.uniform(0, 10, size=(3, 4)).astype(np.float32)
         const1 = relay.Constant(tvm.nd.array(arr))
@@ -20,7 +20,6 @@ class TestRelayIR(unittest.TestCase):
         self.assertIsNone(const1.span)
         print(const1)
         print(const2)
-        # str(const)
         check_json_roundtrip(const1)
 
     def test_tuple(self):
