@@ -33,7 +33,6 @@ if __name__ == "__main__":
         model_ckpt = "/home/richard/.cache/huggingface/hub/models--bert-base-uncased/"
     else:
         raise ValueError("Unsupported platform")
-    #
 
     tokenizer = AutoTokenizer.from_pretrained(model_ckpt)
 
