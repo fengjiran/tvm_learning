@@ -23,12 +23,15 @@ class TestRelayIRNodes(unittest.TestCase):
         check_json_roundtrip(const1)
 
     def test_tuple(self):
-        fields = tvm.runtime.convert([])
+        a = relay.const(1)
+        b = relay.const(2)
+        c = relay.const(3)
+        fields = tvm.runtime.convert([a, b, c])
         tup = relay.Tuple(fields)
         self.assertEqual(tup.fields, fields)
         self.assertIsNone(tup.span)
         print(tup)
-        str(tup)
+        # str(tup)
         check_json_roundtrip(tup)
 
     def test_local_var(self):
