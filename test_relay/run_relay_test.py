@@ -1,5 +1,5 @@
 import unittest
-import test_relay_ir
+import test_relay_ir_nodes
 
 
 def create_suite():
