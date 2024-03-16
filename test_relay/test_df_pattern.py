@@ -3,8 +3,14 @@ import tvm
 from tvm import relay
 from tvm.relay.dataflow_pattern import *
 
+# NB: 1 corresponds to the C++ enum that specicfies this
+# we loose the type safety due to the Python/C++ calling
+# convention.
+K_ELEMWISE = 0
+K_BROADCAST = 1
 
-class TestPatternMatch(unittest.TestCase):
+
+class TestDFPattern(unittest.TestCase):
     def test_expr_pattern(self):
         expr = is_expr(relay.var("x", shape=(4, 1)))
         self.assertTrue(isinstance(expr, ExprPattern))
@@ -82,6 +88,32 @@ class TestPatternMatch(unittest.TestCase):
         pattern = has_shape(shape)
         assert isinstance(pattern, ShapePattern)
         assert tvm.ir.structural_equal(pattern.shape, shape)
+
+    def test_AttrPattern(self):
+        op = is_op("add").has_attr({"TOpPattern": K_ELEMWISE})
+        assert isinstance(op, AttrPattern)
+        assert op.attrs["TOpPattern"] == K_ELEMWISE
+
+    def test_IfPattern(self):
+        x = is_var("x")
+        y = is_var("y")
+        pat = is_if(is_op("less")(x, y), x, y)
+
+        assert isinstance(pat, IfPattern)
+        assert isinstance(pat.cond, CallPattern)
+        assert isinstance(pat.true_branch, VarPattern)
+        assert isinstance(pat.false_branch, VarPattern)
+
+    def test_LetPattern(self):
+        x = is_var("x")
+        y = is_var("y")
+        let_var = is_var("let")
+        pat = is_let(let_var, is_op("less")(x, y), let_var)
+
+        assert isinstance(pat, LetPattern)
+        assert isinstance(pat.var, VarPattern)
+        assert isinstance(pat.value, CallPattern)
+        assert isinstance(pat.body, VarPattern)
 
 
 if __name__ == '__main__':
