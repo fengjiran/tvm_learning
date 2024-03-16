@@ -19,6 +19,18 @@ class TestPatternMatch(unittest.TestCase):
         c = is_constant()
         self.assertTrue(isinstance(c, ConstantPattern))
 
+    def test_wildcard_pattern(self):
+        wc = wildcard()
+        self.assertTrue(isinstance(wc, WildcardPattern))
+
+    def test_CallPattern(self):
+        wc1 = wildcard()
+        wc2 = wildcard()
+        c = is_op("add")(wc1, wc2)
+        assert isinstance(c, CallPattern)
+        assert isinstance(c.args[0], WildcardPattern)
+        assert isinstance(c.args[1], WildcardPattern)
+
 
 if __name__ == '__main__':
     unittest.main()
