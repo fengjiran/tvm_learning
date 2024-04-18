@@ -26,6 +26,21 @@ class AttentionHead(nn.Module):
         return torch.bmm(weights, value)
 
 
+class MultiHeadAttention(nn.Module):
+    def __init__(self, embed_dim, num_heads):
+        super().__init__()
+        head_dim = embed_dim // num_heads
+        self.heads = nn.ModuleList([AttentionHead(embed_dim, head_dim) for _ in range(num_heads)])
+        self.output_linear = nn.Linear(embed_dim, embed_dim)
+
+    def forward(self, query, key, value, mask=None, query_mask=None, key_mask=None):
+        if query_mask is not None and key_mask is not None:
+            mask = torch.bmm(query_mask.unsqueeze(-1), key_mask.unsqueeze(1))
+        x = torch.cat([h(query, key, value, mask=mask) for h in self.heads], dim=-1)
+        x = self.output_linear(x)
+        return x
+
+
 if __name__ == "__main__":
     if sys.platform.startswith("darwin"):
         model_ckpt = "/Users/richard/.cache/huggingface/hub/models--bert-base-uncased/"
