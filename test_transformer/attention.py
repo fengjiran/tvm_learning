@@ -32,6 +32,7 @@ class MultiHeadAttention(nn.Module):
         embed_dim = config.embed_dim
         num_heads = config.num_attention_heads
         head_dim = embed_dim // num_heads
+        assert head_dim * num_heads == embed_dim, "embed_dim must be divisible by num_heads"
         self.heads = nn.ModuleList([AttentionHead(embed_dim, head_dim) for _ in range(num_heads)])
         self.output_linear = nn.Linear(embed_dim, embed_dim)
 
@@ -56,6 +57,26 @@ class FeedForward(nn.Module):
         x = self.gelu(x)
         x = self.linear2(x)
         x = self.dropout(x)
+        return x
+
+
+class TransformerEncoderLayer(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.layer_norm1 = nn.LayerNorm(config.hidden_size)
+        self.layer_norm2 = nn.LayerNorm(config.hidden_size)
+        self.attention = MultiHeadAttention(config)
+        self.feed_forward = FeedForward(config)
+
+    def forward(self, x, mask=None):
+        # apply layer norm and then copy input into query, key, value
+        hidden_state = self.layer_norm1(x)
+
+        # apply self attention with a skip connection
+        x = x + self.attention(hidden_state, hidden_state, hidden_state, mask=mask)
+
+        # apply feed-forward layer with a skip connection
+        x = x + self.feed_forward(self.layer_norm2(x))
         return x
 
 
