@@ -27,8 +27,10 @@ class AttentionHead(nn.Module):
 
 
 class MultiHeadAttention(nn.Module):
-    def __init__(self, embed_dim, num_heads):
+    def __init__(self, config):
         super().__init__()
+        embed_dim = config.embed_dim
+        num_heads = config.num_attention_heads
         head_dim = embed_dim // num_heads
         self.heads = nn.ModuleList([AttentionHead(embed_dim, head_dim) for _ in range(num_heads)])
         self.output_linear = nn.Linear(embed_dim, embed_dim)
@@ -38,6 +40,22 @@ class MultiHeadAttention(nn.Module):
             mask = torch.bmm(query_mask.unsqueeze(-1), key_mask.unsqueeze(1))
         x = torch.cat([h(query, key, value, mask=mask) for h in self.heads], dim=-1)
         x = self.output_linear(x)
+        return x
+
+
+class FeedForward(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.linear1 = nn.Linear(config.hidden_size, config.intermediate_size)
+        self.linear2 = nn.Linear(config.intermediate_size, config.hidden_size)
+        self.gelu = nn.GELU()
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+
+    def forward(self, x):
+        x = self.linear1(x)
+        x = self.gelu(x)
+        x = self.linear2(x)
+        x = self.dropout(x)
         return x
 
 
