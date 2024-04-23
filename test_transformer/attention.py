@@ -80,6 +80,19 @@ class TransformerEncoderLayer(nn.Module):
         return x
 
 
+class Embeddings(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.token_embedding = nn.Embedding(config.vocab_size, config.hidden_size)
+        self.position_embedding = nn.Embedding(config.max_position_embeddings, config.hidden_size)
+        self.layer_norm = nn.LayerNorm(config.hidden_size, eps=1e-12)
+        self.dropout = nn.Dropout()
+
+    def forward(self, input_ids):
+        # create position IDs for input sequence
+        seq_len = input_ids.size(1)
+
+
 if __name__ == "__main__":
     if sys.platform.startswith("darwin"):
         model_ckpt = "/Users/richard/.cache/huggingface/hub/models--bert-base-uncased/"
