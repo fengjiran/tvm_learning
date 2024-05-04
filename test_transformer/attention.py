@@ -103,6 +103,19 @@ class Embeddings(nn.Module):
         return embeddings
 
 
+class TransformerEncoder(nn.Module):
+    def __init__(self, config):
+        super().__init__()
+        self.embeddings = Embeddings(config)
+        self.layers = nn.ModuleList([TransformerEncoderLayer(config) for _ in range(config.num_hidden_layers)])
+
+    def forward(self, x, mask=None):
+        x = self.embeddings(x)
+        for layer in self.layers:
+            x = layer(x, mask=mask)
+        return x
+
+
 def GetPositionEncoding(seq_len, dim, n=10000):
     assert dim % 2 == 0
     PE = np.zeros(seq_len, dim)
