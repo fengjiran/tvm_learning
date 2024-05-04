@@ -154,3 +154,6 @@ if __name__ == "__main__":
 
     embedding_layer = Embeddings(config)
     print(embedding_layer(inputs.input_ids).size())
+
+    encoder = TransformerEncoder(config)
+    print(encoder(inputs.input_ids).size())
