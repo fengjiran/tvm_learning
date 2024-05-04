@@ -1,6 +1,7 @@
 import sys
 import math
 import torch
+import numpy as np
 from torch import nn
 from transformers import AutoConfig
 from transformers import AutoTokenizer
@@ -91,6 +92,27 @@ class Embeddings(nn.Module):
     def forward(self, input_ids):
         # create position IDs for input sequence
         seq_len = input_ids.size(1)
+        position_ids = torch.arange(seq_len, dtype=torch.long).unsqueeze(0)
+
+        # Create token and position embedings
+        token_embeddings = self.token_embedding(input_ids)
+        position_embeddings = self.position_embedding(position_ids)
+        embeddings = token_embeddings + position_embeddings
+        embeddings = self.layer_norm(embeddings)
+        embeddings = self.dropout(embeddings)
+        return embeddings
+
+
+def GetPositionEncoding(seq_len, dim, n=10000):
+    assert dim % 2 == 0
+    PE = np.zeros(seq_len, dim)
+    for pos in range(seq_len):
+        for i in range(dim // 2):
+            denominator = np.power(n, 2 * i / dim)
+            PE[pos, 2 * i] = np.sin(pos / denominator)
+            PE[pos, 2 * i + 1] = np.cos(pos / denominator)
+
+    return PE
 
 
 if __name__ == "__main__":
@@ -116,3 +138,6 @@ if __name__ == "__main__":
 
     encoder_layer = TransformerEncoderLayer(config)
     print(encoder_layer(inputs_embeds).size())
+
+    embedding_layer = Embeddings(config)
+    print(embedding_layer(inputs.input_ids).size())
