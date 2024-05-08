@@ -18,7 +18,7 @@ class AttentionHead(nn.Module):
         query = self.q(query)
         key = self.k(key)
         value = self.v(value)
-        scale = torch.sqrt(query.size(-1))
+        scale = math.sqrt(query.size(-1))
         scores = torch.bmm(query, key.transpose(1, 2)) / scale
         if mask is not None:
             scores = scores.masked_fill(mask == 0, -float("inf"))
@@ -29,7 +29,7 @@ class AttentionHead(nn.Module):
 class MultiHeadAttention(nn.Module):
     def __init__(self, config):
         super().__init__()
-        embed_dim = config.embed_dim
+        embed_dim = config.hidden_size
         num_heads = config.num_attention_heads
         head_dim = embed_dim // num_heads
         assert head_dim * num_heads == embed_dim, "embed_dim must be divisible by num_heads"
@@ -113,3 +113,6 @@ if __name__ == "__main__":
 
     inputs_embeds = token_emb(inputs.input_ids)
     print(inputs_embeds.size())
+
+    encoder_layer = TransformerEncoderLayer(config)
+    print(encoder_layer(inputs_embeds).size())
