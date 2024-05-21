@@ -116,7 +116,7 @@ class TransformerEncoder(nn.Module):
         return x
 
 
-def GetPositionEncoding(seq_len, dim, n=10000):
+def get_position_encoding(seq_len, dim, n=10000):
     assert dim % 2 == 0
     PE = np.zeros(seq_len, dim)
     for pos in range(seq_len):
